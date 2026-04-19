@@ -1,0 +1,25 @@
+export type IGrievanceFilters = {
+  searchTerm?: string;
+  startDate?: string;
+  endDate?: string;
+  year?: string;
+  month?: string;
+  deviceId?: string;
+  victimId?: string;
+  happiness?: string;
+  responserId?: string;
+  grievanceTypeId?: string;
+  withWhomId?: string;
+  variationOccurrence?: string;
+  level?: string;
+  status?: string;
+  victimFeedback?: string;
+  departmentId?: string;
+  companyId?: string;
+  buildingId?: string;
+  buildings?: string;
+  floorId?: string;
+  floors?: string;
+  lineId?: string;
+  isAnonymous?: string;
+};

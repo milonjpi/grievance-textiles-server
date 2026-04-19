@@ -1,0 +1,511 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// employee
+model Employee {
+  id             String           @id @default(uuid())
+  employeeName   String
+  employeeNameBn String
+  officeId       String           @unique
+  designationId  String
+  designation    Designation      @relation(fields: [designationId], references: [id])
+  departmentId   String
+  department     Department       @relation(fields: [departmentId], references: [id])
+  sectionId      String?
+  section        Section?         @relation(fields: [sectionId], references: [id])
+  subSectionId   String?
+  subSection     SubSection?      @relation(fields: [subSectionId], references: [id])
+  companyId      String
+  company        Company          @relation(fields: [companyId], references: [id])
+  locationId     String?
+  location       Location?        @relation(fields: [locationId], references: [id])
+  gender         Gender           @default(Male)
+  category       EmployeeCategory @default(Management)
+  division       EmployeeDivision @default(RMG)
+  joiningDate    DateTime?
+  bloodGroup     String?
+  ipPhone        String?
+  mobile         String?
+  email          String?
+  floorId        String?
+  floor          Floor?           @relation(fields: [floorId], references: [id])
+  lineId         String?
+  line           Line?            @relation(fields: [lineId], references: [id])
+  buildingId     String
+  building       Building         @relation(fields: [buildingId], references: [id])
+  password       String
+  role           UserRole         @default(user)
+  profileImg     String?
+  happiness      HappinessIndex   @default(NONE)
+  isActive       Boolean          @default(true)
+  code           String           @default("999")
+  tokens         String[]
+
+  createdAt             DateTime             @default(now())
+  updatedAt             DateTime             @updatedAt
+  menus                 MenuPermission[]
+  subMenus              SubMenuPermission[]
+  sections              SectionPermission[]
+  card                  Card?
+  asVictimGrievances    Grievance[]          @relation("VictimRef")
+  asOffenderGrievances  Grievance[]          @relation("WithWhomRef")
+  asResponserGrievances Grievance[]          @relation("ResponserRef")
+  memberOnMeetings      Meeting[]            @relation("MemberOnMeeting")
+  levels                LevelMember[]        @relation("MembersOnLevel")
+  createdMeetings       Meeting[]            @relation("MeetingCreator")
+  buildingPermissions   BuildingPermission[]
+  floorPermissions      FloorPermission[]
+
+  @@map("employees")
+}
+
+// menu permission
+model MenuPermission {
+  id         String   @id @default(uuid())
+  employeeId String
+  employee   Employee @relation(fields: [employeeId], references: [id])
+  label      String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@map("menuPermissions")
+}
+
+// submenu permission
+model SubMenuPermission {
+  id         String   @id @default(uuid())
+  employeeId String
+  employee   Employee @relation(fields: [employeeId], references: [id])
+  label      String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@map("subMenuPermissions")
+}
+
+// section permission
+model SectionPermission {
+  id         String   @id @default(uuid())
+  employeeId String
+  employee   Employee @relation(fields: [employeeId], references: [id])
+  label      String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@map("sectionPermissions")
+}
+
+// building permission
+model BuildingPermission {
+  id         String   @id @default(uuid())
+  employeeId String
+  employee   Employee @relation(fields: [employeeId], references: [id])
+  buildingId String
+  building   Building @relation(fields: [buildingId], references: [id])
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@map("buildingPermissions")
+}
+
+// floor permission
+model FloorPermission {
+  id         String   @id @default(uuid())
+  employeeId String
+  employee   Employee @relation(fields: [employeeId], references: [id])
+  floorId    String
+  floor      Floor    @relation(fields: [floorId], references: [id])
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@map("floorPermissions")
+}
+
+// designation
+model Designation {
+  id      String @id @default(uuid())
+  label   String @unique
+  labelBn String
+  code    String @default("999")
+
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  employees Employee[]
+
+  @@map("designations")
+}
+
+// department
+model Department {
+  id      String @id @default(uuid())
+  label   String @unique
+  labelBn String
+
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+  employees  Employee[]
+  grievances Grievance[]
+
+  @@map("departments")
+}
+
+// section
+model Section {
+  id      String @id @default(uuid())
+  label   String @unique
+  labelBn String
+
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  employees Employee[]
+
+  @@map("sections")
+}
+
+// sub section
+model SubSection {
+  id      String @id @default(uuid())
+  label   String @unique
+  labelBn String
+
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  employees Employee[]
+
+  @@map("subSections")
+}
+
+// company
+model Company {
+  id      String  @id @default(uuid())
+  label   String  @unique
+  labelBn String
+  domain  String?
+
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+  employees  Employee[]
+  grievances Grievance[]
+
+  @@map("companies")
+}
+
+// location
+model Location {
+  id      String @id @default(uuid())
+  label   String @unique
+  labelBn String
+
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  employees Employee[]
+
+  @@map("locations")
+}
+
+// building
+model Building {
+  id       String   @id @default(uuid())
+  label    String   @unique
+  labelBn  String
+  emails   String[]
+  cc       String[]
+  bcc      String[]
+  sms      String[]
+  floorSms String[]
+
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  employees           Employee[]
+  devices             Device[]
+  grievances          Grievance[]
+  buildingPermissions BuildingPermission[]
+
+  @@map("buildings")
+}
+
+// floor
+model Floor {
+  id      String   @id @default(uuid())
+  label   String   @unique
+  labelBn String
+  code    String   @default("999")
+  sms     String[]
+
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  employees         Employee[]
+  devices           Device[]
+  grievances        Grievance[]
+  floorPermissions  FloorPermission[]
+  devicePermissions DevicePermission[]
+
+  @@map("floors")
+}
+
+// line no
+model Line {
+  id      String @id @default(uuid())
+  label   String @unique
+  labelBn String
+
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+  employees  Employee[]
+  grievances Grievance[]
+
+  @@map("lines")
+}
+
+// card
+model Card {
+  officeId String   @id
+  employee Employee @relation(fields: [officeId], references: [officeId])
+  cardNo   String   @unique
+
+  @@map("cards")
+}
+
+// demo card
+model DemoCard {
+  officeId  String @id
+  cardNo    String @unique
+  cardNoInt String @unique
+
+  @@map("demoCards")
+}
+
+// device
+model Device {
+  id         String   @id @default(uuid())
+  label      String   @unique
+  floorId    String
+  floor      Floor    @relation(fields: [floorId], references: [id])
+  buildingId String
+  building   Building @relation(fields: [buildingId], references: [id])
+
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  grievances        Grievance[]
+  devicePermissions DevicePermission[]
+
+  @@map("devices")
+}
+
+// device permission
+model DevicePermission {
+  id        String   @id @default(uuid())
+  deviceId  String
+  device    Device   @relation(fields: [deviceId], references: [id])
+  floorId   String
+  floor     Floor    @relation(fields: [floorId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("devicePermissions")
+}
+
+// grievance type
+model GrievanceType {
+  id        String         @id @default(uuid())
+  happiness HappinessIndex @default(SAD)
+  label     String
+  labelBn   String
+  code      String         @default("999")
+
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  grievances        Grievance[]
+  grievanceSubTypes GrievanceSubType[]
+
+  @@unique([happiness, label])
+  @@map("grievanceTypes")
+}
+
+// grievance sub type
+model GrievanceSubType {
+  id              String        @id @default(uuid())
+  grievanceTypeId String
+  grievanceType   GrievanceType @relation(fields: [grievanceTypeId], references: [id])
+  label           String
+  labelBn         String
+  code            String        @default("999")
+
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+  grievances Grievance[]
+
+  @@unique([grievanceTypeId, label])
+  @@map("grievanceSubTypes")
+}
+
+// grievance
+model Grievance {
+  id           String         @id @default(uuid())
+  tokenNo      String         @unique
+  date         DateTime
+  year         String
+  month        String
+  lineId       String?
+  line         Line?          @relation(fields: [lineId], references: [id])
+  floorId      String?
+  floor        Floor?         @relation(fields: [floorId], references: [id])
+  buildingId   String
+  building     Building       @relation(fields: [buildingId], references: [id])
+  departmentId String
+  department   Department     @relation(fields: [departmentId], references: [id])
+  companyId    String
+  company      Company        @relation(fields: [companyId], references: [id])
+  deviceId     String
+  device       Device         @relation(fields: [deviceId], references: [id])
+  victimId     String
+  victim       Employee       @relation(fields: [victimId], references: [id], name: "VictimRef")
+  happiness    HappinessIndex
+
+  grievance           String?
+  responseDate        DateTime?
+  responserId         String?
+  responseBy          Employee?                @relation(fields: [responserId], references: [id], name: "ResponserRef")
+  grievanceTypeId     String
+  grievanceType       GrievanceType            @relation(fields: [grievanceTypeId], references: [id])
+  grievanceSubTypeId  String?
+  grievanceSubType    GrievanceSubType?        @relation(fields: [grievanceSubTypeId], references: [id])
+  whatHappened        String?
+  whereHappened       String?
+  withWhomId          String?
+  withWhom            Employee?                @relation(fields: [withWhomId], references: [id], name: "WithWhomRef")
+  impact              String?
+  variationOccurrence VariationOccurrenceType?
+  remarks             String?
+  isAnonymous         Boolean                  @default(false)
+
+  resolvedDate   DateTime?
+  level          LevelStatus     @default(Level_1)
+  status         GrievanceStatus @default(Pending)
+  victimFeedback HappinessIndex  @default(NONE)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  meetings  Meeting[]
+
+  @@map("grievances")
+}
+
+model Meeting {
+  id String @id @default(uuid())
+
+  grievanceId String
+  grievance   Grievance @relation(fields: [grievanceId], references: [id])
+
+  level            LevelStatus
+  targetLevel      TargetLevel
+  reason           String
+  initiativeTaken  String
+  remarks          String?
+  committeeMembers Employee[]  @relation("MemberOnMeeting")
+
+  takenTime   DateTime
+  releaseTime DateTime?
+
+  status GrievanceStatus
+
+  creatorId String
+  createdBy Employee @relation(fields: [creatorId], references: [id], name: "MeetingCreator")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("meetings")
+}
+
+model LevelMember {
+  id      String      @id @default(uuid())
+  level   LevelStatus @unique
+  remarks String?
+  members Employee[]  @relation("MembersOnLevel")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("levelMembers")
+}
+
+model CustomSetting {
+  id  String   @id @default(uuid())
+  to  String[]
+  cc  String[]
+  bcc String[]
+  sms Boolean  @default(true)
+
+  @@map("customSetting")
+}
+
+// ENUMS
+enum UserRole {
+  super_admin
+  admin
+  user
+}
+
+enum HappinessIndex {
+  NONE
+  HAPPY
+  SAD
+}
+
+enum GrievanceStatus {
+  Pending
+  In_Progress
+  Resolved
+}
+
+enum LevelStatus {
+  Level_1
+  Level_2
+  Level_3
+  Level_4
+  Level_5
+}
+
+enum TargetLevel {
+  Resolved
+  Level_1
+  Level_2
+  Level_3
+  Level_4
+  Level_5
+}
+
+enum VariationOccurrenceType {
+  One_Time
+  Recurring
+  Ongoing
+}
+
+enum Gender {
+  Male
+  Female
+}
+
+enum EmployeeCategory {
+  Management
+  Officer
+  Staff
+  Visitor
+  Worker
+}
+
+enum EmployeeDivision {
+  RMG
+  Garments
+  Textile
+}
