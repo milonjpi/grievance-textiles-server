@@ -547,7 +547,14 @@ const getAll = async (
       total,
       totalPage,
     },
-    data: result,
+    data: result.map(item => {
+      if (item.isAnonymous) {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { victim, ...rest } = item;
+        return { ...rest, victimId: '' };
+      }
+      return item;
+    }),
   };
 };
 
@@ -621,6 +628,14 @@ const getSingle = async (id: string): Promise<Grievance | null> => {
       },
     },
   });
+
+  if (!result) return null;
+
+  if (result.isAnonymous) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { victim, ...rest } = result;
+    return { ...rest, victimId: '' };
+  }
 
   return result;
 };
