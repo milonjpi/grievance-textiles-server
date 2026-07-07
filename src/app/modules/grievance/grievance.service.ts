@@ -155,46 +155,46 @@ const insertIntoDB = async (data: Grievance): Promise<Grievance | null> => {
     }
   }
 
-  if (data?.happiness === 'SAD' && data.isAnonymous && building?.cc?.length) {
-    const subjectAnonymous = `New Anonymous Grievance Submitted - ${building.label}`;
+  // if (data?.happiness === 'SAD' && data.isAnonymous && building?.cc?.length) {
+  //   const subjectAnonymous = `New Anonymous Grievance Submitted - ${building.label}`;
 
-    const htmlAnonymous = `
-      <h3>New <span style='color: red;'>Anonymous</span> Grievance Submitted / নতুন <span style='color: red;'>বেনামী</span> অভিযোগ জমা হয়েছে</h3> 
-      <p><b>Token / টোকেন:</b> ${result.tokenNo}</p>
-      <p><b>Office ID / অফিস আইডি:</b> ${isExist.officeId}</p>
-      <p><b>Employee / কর্মচারী:</b> ${isExist.employeeNameBn}</p>
-      <p><b>Designation / পদবী:</b> ${isExist.designation?.labelBn}</p>
-      <p><b>Department / ডিপার্টমেন্ট:</b> ${isExist.department?.labelBn}</p>
-      <p><b>Section / সেকশন:</b> ${isExist.section?.labelBn}</p>
-      <p><b>Building / ভবন:</b> ${building?.labelBn || 'প্রযোজ্য নয়'}</p>
-      <p><b>Floor / ফ্লোর:</b> ${isExist.floor?.labelBn || 'প্রযোজ্য নয়'}</p>
-      <p><b>Line No / লাইন নং:</b> ${
-        isExist.line?.labelBn || 'প্রযোজ্য নয়'
-      }</p>
-      <p><b>Grievance / অভিযোগ:</b> ${
-        result.grievanceType?.label + ' / ' + result.grievanceType?.labelBn
-      }</p>
-      <p><b>Grievance Details / অভিযোগের বিবরণ:</b> ${result.grievance}</p>
-      <p><b>Grievance Time / অভিযোগের সময়:</b> ${moment(result.date).format(
-        'lll'
-      )}</p>
-      <p><b>URL:</b> <a href='http://192.168.30.14/pages/grievance-list/${
-        result?.id
-      }'>Click Here</a></p>
-    `;
-    try {
-      await sendEmail(
-        building.cc,
-        [],
-        building.bcc || [],
-        subjectAnonymous,
-        htmlAnonymous
-      );
-    } catch (error) {
-      // eslint-disable-next-line no-console
-      console.error('Email sending failed:', error);
-    }
-  }
+  //   const htmlAnonymous = `
+  //     <h3>New <span style='color: red;'>Anonymous</span> Grievance Submitted / নতুন <span style='color: red;'>বেনামী</span> অভিযোগ জমা হয়েছে</h3>
+  //     <p><b>Token / টোকেন:</b> ${result.tokenNo}</p>
+  //     <p><b>Office ID / অফিস আইডি:</b> ${isExist.officeId}</p>
+  //     <p><b>Employee / কর্মচারী:</b> ${isExist.employeeNameBn}</p>
+  //     <p><b>Designation / পদবী:</b> ${isExist.designation?.labelBn}</p>
+  //     <p><b>Department / ডিপার্টমেন্ট:</b> ${isExist.department?.labelBn}</p>
+  //     <p><b>Section / সেকশন:</b> ${isExist.section?.labelBn}</p>
+  //     <p><b>Building / ভবন:</b> ${building?.labelBn || 'প্রযোজ্য নয়'}</p>
+  //     <p><b>Floor / ফ্লোর:</b> ${isExist.floor?.labelBn || 'প্রযোজ্য নয়'}</p>
+  //     <p><b>Line No / লাইন নং:</b> ${
+  //       isExist.line?.labelBn || 'প্রযোজ্য নয়'
+  //     }</p>
+  //     <p><b>Grievance / অভিযোগ:</b> ${
+  //       result.grievanceType?.label + ' / ' + result.grievanceType?.labelBn
+  //     }</p>
+  //     <p><b>Grievance Details / অভিযোগের বিবরণ:</b> ${result.grievance}</p>
+  //     <p><b>Grievance Time / অভিযোগের সময়:</b> ${moment(result.date).format(
+  //       'lll'
+  //     )}</p>
+  //     <p><b>URL:</b> <a href='http://192.168.30.14/pages/grievance-list/${
+  //       result?.id
+  //     }'>Click Here</a></p>
+  //   `;
+  //   try {
+  //     await sendEmail(
+  //       building.cc,
+  //       [],
+  //       building.bcc || [],
+  //       subjectAnonymous,
+  //       htmlAnonymous
+  //     );
+  //   } catch (error) {
+  //     // eslint-disable-next-line no-console
+  //     console.error('Email sending failed:', error);
+  //   }
+  // }
 
   if (
     customSetting?.sms &&
@@ -399,6 +399,8 @@ const getAll = async (
     startDate,
     endDate,
     status,
+    buildingId,
+    floorId,
     buildings,
     floors,
     ...filterData
@@ -427,12 +429,72 @@ const getAll = async (
     andConditions.push({ status: { in: JSON.parse(status) } });
   }
 
-  if (buildings) {
-    andConditions.push({ buildingId: { in: JSON.parse(buildings) } });
+  if (buildingId) {
+    andConditions.push({
+      OR: [
+        {
+          AND: [{ buildingId }, { isAnonymous: false }],
+        },
+        {
+          AND: [{ device: { buildingId } }, { isAnonymous: true }],
+        },
+      ],
+    });
   }
 
+  if (buildings) {
+    andConditions.push({
+      OR: [
+        {
+          AND: [
+            { buildingId: { in: JSON.parse(buildings) } },
+            { isAnonymous: false },
+          ],
+        },
+        {
+          AND: [
+            { device: { buildingId: { in: JSON.parse(buildings) } } },
+            { isAnonymous: true },
+          ],
+        },
+      ],
+    });
+  }
+
+  if (floorId) {
+    andConditions.push({
+      OR: [
+        {
+          AND: [{ floorId }, { isAnonymous: false }],
+        },
+        {
+          AND: [{ device: { floorId } }, { isAnonymous: false }],
+        },
+      ],
+    });
+  }
+
+  // if (floors) {
+  //   andConditions.push({ floorId: { in: JSON.parse(floors) } });
+  // }
+
   if (floors) {
-    andConditions.push({ floorId: { in: JSON.parse(floors) } });
+    andConditions.push({
+      OR: [
+        {
+          AND: [
+            { floorId: { in: JSON.parse(floors) } },
+            { isAnonymous: false },
+          ],
+        },
+        {
+          AND: [
+            { device: { floorId: { in: JSON.parse(floors) } } },
+            { isAnonymous: true },
+          ],
+        },
+      ],
+    });
   }
 
   if (startDate) {

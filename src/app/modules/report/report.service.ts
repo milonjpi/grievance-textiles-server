@@ -34,11 +34,41 @@ const overview = async (filters: IReportFilter): Promise<IOverview> => {
   }
 
   if (buildings) {
-    andConditions.push({ buildingId: { in: JSON.parse(buildings) } });
+    andConditions.push({
+      OR: [
+        {
+          AND: [
+            { buildingId: { in: JSON.parse(buildings) } },
+            { isAnonymous: false },
+          ],
+        },
+        {
+          AND: [
+            { device: { buildingId: { in: JSON.parse(buildings) } } },
+            { isAnonymous: true },
+          ],
+        },
+      ],
+    });
   }
 
   if (floors) {
-    andConditions.push({ floorId: { in: JSON.parse(floors) } });
+    andConditions.push({
+      OR: [
+        {
+          AND: [
+            { floorId: { in: JSON.parse(floors) } },
+            { isAnonymous: false },
+          ],
+        },
+        {
+          AND: [
+            { device: { floorId: { in: JSON.parse(floors) } } },
+            { isAnonymous: true },
+          ],
+        },
+      ],
+    });
   }
 
   const whereConditions: Prisma.GrievanceWhereInput =
@@ -71,11 +101,29 @@ const grievanceTypeWise = async (
   const andConditions = [];
 
   if (buildingId) {
-    andConditions.push({ buildingId });
+    andConditions.push({
+      OR: [
+        {
+          AND: [{ buildingId }, { isAnonymous: false }],
+        },
+        {
+          AND: [{ device: { buildingId } }, { isAnonymous: true }],
+        },
+      ],
+    });
   }
 
   if (floorId) {
-    andConditions.push({ floorId });
+    andConditions.push({
+      OR: [
+        {
+          AND: [{ floorId }, { isAnonymous: false }],
+        },
+        {
+          AND: [{ device: { floorId } }, { isAnonymous: false }],
+        },
+      ],
+    });
   }
 
   const whereConditions: Prisma.GrievanceWhereInput =
@@ -124,11 +172,29 @@ const grievanceSubTypeWise = async (
   const andConditions = [];
 
   if (buildingId) {
-    andConditions.push({ buildingId });
+    andConditions.push({
+      OR: [
+        {
+          AND: [{ buildingId }, { isAnonymous: false }],
+        },
+        {
+          AND: [{ device: { buildingId } }, { isAnonymous: true }],
+        },
+      ],
+    });
   }
 
   if (floorId) {
-    andConditions.push({ floorId });
+    andConditions.push({
+      OR: [
+        {
+          AND: [{ floorId }, { isAnonymous: false }],
+        },
+        {
+          AND: [{ device: { floorId } }, { isAnonymous: false }],
+        },
+      ],
+    });
   }
 
   const whereConditions: Prisma.GrievanceWhereInput =
@@ -177,11 +243,29 @@ const departmentWise = async (
   const andConditions = [];
 
   if (buildingId) {
-    andConditions.push({ buildingId });
+    andConditions.push({
+      OR: [
+        {
+          AND: [{ buildingId }, { isAnonymous: false }],
+        },
+        {
+          AND: [{ device: { buildingId } }, { isAnonymous: true }],
+        },
+      ],
+    });
   }
 
   if (floorId) {
-    andConditions.push({ floorId });
+    andConditions.push({
+      OR: [
+        {
+          AND: [{ floorId }, { isAnonymous: false }],
+        },
+        {
+          AND: [{ device: { floorId } }, { isAnonymous: false }],
+        },
+      ],
+    });
   }
 
   const whereConditions: Prisma.GrievanceWhereInput =
@@ -230,7 +314,16 @@ const buildingWise = async (
   const andConditions = [];
 
   if (floorId) {
-    andConditions.push({ floorId });
+    andConditions.push({
+      OR: [
+        {
+          AND: [{ floorId }, { isAnonymous: false }],
+        },
+        {
+          AND: [{ device: { floorId } }, { isAnonymous: false }],
+        },
+      ],
+    });
   }
 
   const whereConditions: Prisma.GrievanceWhereInput =
@@ -311,11 +404,29 @@ const stageWise = async (filters: IReportFilter): Promise<IStageWise[]> => {
   const andConditions = [];
 
   if (buildingId) {
-    andConditions.push({ buildingId });
+    andConditions.push({
+      OR: [
+        {
+          AND: [{ buildingId }, { isAnonymous: false }],
+        },
+        {
+          AND: [{ device: { buildingId } }, { isAnonymous: true }],
+        },
+      ],
+    });
   }
 
   if (floorId) {
-    andConditions.push({ floorId });
+    andConditions.push({
+      OR: [
+        {
+          AND: [{ floorId }, { isAnonymous: false }],
+        },
+        {
+          AND: [{ device: { floorId } }, { isAnonymous: false }],
+        },
+      ],
+    });
   }
 
   const whereConditions: Prisma.GrievanceWhereInput =
@@ -344,11 +455,29 @@ const durationWise = async (filters: IReportFilter): Promise<IDurationWise> => {
   const andConditions = [];
 
   if (buildingId) {
-    andConditions.push({ buildingId });
+    andConditions.push({
+      OR: [
+        {
+          AND: [{ buildingId }, { isAnonymous: false }],
+        },
+        {
+          AND: [{ device: { buildingId } }, { isAnonymous: true }],
+        },
+      ],
+    });
   }
 
   if (floorId) {
-    andConditions.push({ floorId });
+    andConditions.push({
+      OR: [
+        {
+          AND: [{ floorId }, { isAnonymous: false }],
+        },
+        {
+          AND: [{ device: { floorId } }, { isAnonymous: false }],
+        },
+      ],
+    });
   }
 
   const whereConditions: Prisma.GrievanceWhereInput =
