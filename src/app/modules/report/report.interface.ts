@@ -9,6 +9,8 @@ import {
 
 export type IReportFilter = {
   happiness?: string;
+  startDate?: string;
+  endDate?: string;
   buildingId?: string;
   floorId?: string;
   buildings?: string;
@@ -16,10 +18,18 @@ export type IReportFilter = {
 };
 
 export type IOverview = {
-  total: number;
-  Pending: number;
-  In_Progress: number;
-  Resolved: number;
+  countAll: {
+    total: number;
+    Pending: number;
+    In_Progress: number;
+    Resolved: number;
+  };
+  countAnonymous: {
+    total: number;
+    Pending: number;
+    In_Progress: number;
+    Resolved: number;
+  };
 };
 
 export type IGrievanceTypeWise = {
@@ -37,7 +47,12 @@ export type IGrievanceSubTypeWise = {
 };
 
 export type IDepartmentWise = {
-  department: Department | undefined;
+  department:
+    | Department
+    | {
+        label: string;
+        labelBn: string;
+      };
   Pending: number;
   In_Progress: number;
   Resolved: number;

@@ -361,8 +361,8 @@ model Grievance {
   floor        Floor?         @relation(fields: [floorId], references: [id])
   buildingId   String
   building     Building       @relation(fields: [buildingId], references: [id])
-  departmentId String
-  department   Department     @relation(fields: [departmentId], references: [id])
+  departmentId String?
+  department   Department?     @relation(fields: [departmentId], references: [id])
   companyId    String
   company      Company        @relation(fields: [companyId], references: [id])
   deviceId     String

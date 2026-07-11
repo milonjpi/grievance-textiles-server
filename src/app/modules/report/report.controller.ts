@@ -89,7 +89,8 @@ const buildingWise = catchAsync(async (req: Request, res: Response) => {
 
 // device wise
 const deviceWise = catchAsync(async (req: Request, res: Response) => {
-  const result = await ReportService.deviceWise();
+  const filters = pick(req.query, reportFilterableFields);
+  const result = await ReportService.deviceWise(filters);
 
   sendResponse<IDeviceWise[]>(res, {
     statusCode: httpStatus.OK,

@@ -32,8 +32,20 @@ const insertIntoDB = async (data: Grievance): Promise<Grievance | null> => {
     },
   });
 
+  const device = await prisma.device.findFirst({
+    where: { id: data.deviceId },
+  });
+
+  const grievanceType = await prisma.grievanceType.findFirst({
+    where: { id: data.grievanceTypeId },
+  });
+
   if (!isExist) {
     throw new ApiError(httpStatus.NOT_FOUND, 'আপনাকে খুঁজে পাওয়া যায়নি');
+  }
+
+  if (!device) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'ডিভাইস টি খুঁজে পাওয়া যায়নি');
   }
 
   if (isExist.happiness === data.happiness) {
@@ -41,13 +53,30 @@ const insertIntoDB = async (data: Grievance): Promise<Grievance | null> => {
   }
 
   // set floor building department company
-  data.lineId = isExist.lineId;
-  data.floorId = isExist.floorId;
-  data.buildingId = isExist.buildingId;
-  data.departmentId = isExist.departmentId;
+  data.lineId = data.isAnonymous ? null : isExist.lineId;
+  data.floorId = data.isAnonymous ? device.floorId : isExist.floorId;
+  data.buildingId = data.isAnonymous ? device?.buildingId : isExist.buildingId;
+  data.departmentId = data.isAnonymous ? null : isExist.departmentId;
   data.companyId = isExist.companyId;
 
   const result = await prisma.$transaction(async trans => {
+    if (data.happiness === 'HAPPY') {
+      await trans.employee.update({
+        where: { id: data.victimId },
+        data: { happiness: 'NONE' },
+      });
+
+      return await trans.grievance.create({
+        data: {
+          ...data,
+          responseDate: data.date,
+          whatHappened: grievanceType?.labelBn || '',
+          status: 'Resolved',
+        },
+        include: { grievanceType: true },
+      });
+    }
+
     await trans.employee.update({
       where: { id: data.victimId },
       data: {
@@ -399,8 +428,6 @@ const getAll = async (
     startDate,
     endDate,
     status,
-    buildingId,
-    floorId,
     buildings,
     floors,
     ...filterData
@@ -429,72 +456,12 @@ const getAll = async (
     andConditions.push({ status: { in: JSON.parse(status) } });
   }
 
-  if (buildingId) {
-    andConditions.push({
-      OR: [
-        {
-          AND: [{ buildingId }, { isAnonymous: false }],
-        },
-        {
-          AND: [{ device: { buildingId } }, { isAnonymous: true }],
-        },
-      ],
-    });
-  }
-
   if (buildings) {
-    andConditions.push({
-      OR: [
-        {
-          AND: [
-            { buildingId: { in: JSON.parse(buildings) } },
-            { isAnonymous: false },
-          ],
-        },
-        {
-          AND: [
-            { device: { buildingId: { in: JSON.parse(buildings) } } },
-            { isAnonymous: true },
-          ],
-        },
-      ],
-    });
+    andConditions.push({ buildingId: { in: JSON.parse(buildings) } });
   }
-
-  if (floorId) {
-    andConditions.push({
-      OR: [
-        {
-          AND: [{ floorId }, { isAnonymous: false }],
-        },
-        {
-          AND: [{ device: { floorId } }, { isAnonymous: false }],
-        },
-      ],
-    });
-  }
-
-  // if (floors) {
-  //   andConditions.push({ floorId: { in: JSON.parse(floors) } });
-  // }
 
   if (floors) {
-    andConditions.push({
-      OR: [
-        {
-          AND: [
-            { floorId: { in: JSON.parse(floors) } },
-            { isAnonymous: false },
-          ],
-        },
-        {
-          AND: [
-            { device: { floorId: { in: JSON.parse(floors) } } },
-            { isAnonymous: true },
-          ],
-        },
-      ],
-    });
+    andConditions.push({ floorId: { in: JSON.parse(floors) } });
   }
 
   if (startDate) {

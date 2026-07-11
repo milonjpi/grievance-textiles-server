@@ -34,41 +34,11 @@ const overview = async (filters: IReportFilter): Promise<IOverview> => {
   }
 
   if (buildings) {
-    andConditions.push({
-      OR: [
-        {
-          AND: [
-            { buildingId: { in: JSON.parse(buildings) } },
-            { isAnonymous: false },
-          ],
-        },
-        {
-          AND: [
-            { device: { buildingId: { in: JSON.parse(buildings) } } },
-            { isAnonymous: true },
-          ],
-        },
-      ],
-    });
+    andConditions.push({ buildingId: { in: JSON.parse(buildings) } });
   }
 
   if (floors) {
-    andConditions.push({
-      OR: [
-        {
-          AND: [
-            { floorId: { in: JSON.parse(floors) } },
-            { isAnonymous: false },
-          ],
-        },
-        {
-          AND: [
-            { device: { floorId: { in: JSON.parse(floors) } } },
-            { isAnonymous: true },
-          ],
-        },
-      ],
-    });
+    andConditions.push({ floorId: { in: JSON.parse(floors) } });
   }
 
   const whereConditions: Prisma.GrievanceWhereInput =
@@ -76,11 +46,21 @@ const overview = async (filters: IReportFilter): Promise<IOverview> => {
 
   const result = await prisma.grievance.groupBy({
     where: whereConditions,
-    by: ['status'],
+    by: ['status', 'isAnonymous'],
     _count: true,
   });
 
-  const counts = result.reduce(
+  const totalAnonymous = result?.filter(el => el.isAnonymous);
+
+  const countAll = result.reduce(
+    (acc, { status, _count }) => {
+      acc[status] = _count;
+      acc.total += _count;
+      return acc;
+    },
+    { Pending: 0, In_Progress: 0, Resolved: 0, total: 0 }
+  );
+  const countAnonymous = totalAnonymous.reduce(
     (acc, { status, _count }) => {
       acc[status] = _count;
       acc.total += _count;
@@ -89,41 +69,42 @@ const overview = async (filters: IReportFilter): Promise<IOverview> => {
     { Pending: 0, In_Progress: 0, Resolved: 0, total: 0 }
   );
 
-  return counts;
+  return {
+    countAll,
+    countAnonymous,
+  };
 };
 
 // grievance Type wise
 const grievanceTypeWise = async (
   filters: IReportFilter
 ): Promise<IGrievanceTypeWise[]> => {
-  const { buildingId, floorId } = filters;
+  const { startDate, endDate, buildingId, floorId } = filters;
 
   const andConditions = [];
 
-  if (buildingId) {
+  if (startDate) {
     andConditions.push({
-      OR: [
-        {
-          AND: [{ buildingId }, { isAnonymous: false }],
-        },
-        {
-          AND: [{ device: { buildingId } }, { isAnonymous: true }],
-        },
-      ],
+      date: {
+        gte: new Date(`${startDate}, 00:00:00`),
+      },
     });
   }
 
-  if (floorId) {
+  if (endDate) {
     andConditions.push({
-      OR: [
-        {
-          AND: [{ floorId }, { isAnonymous: false }],
-        },
-        {
-          AND: [{ device: { floorId } }, { isAnonymous: false }],
-        },
-      ],
+      date: {
+        lte: new Date(`${endDate}, 23:59:59`),
+      },
     });
+  }
+
+  if (buildingId) {
+    andConditions.push({ buildingId });
+  }
+
+  if (floorId) {
+    andConditions.push({ floorId });
   }
 
   const whereConditions: Prisma.GrievanceWhereInput =
@@ -167,34 +148,32 @@ const grievanceTypeWise = async (
 const grievanceSubTypeWise = async (
   filters: IReportFilter
 ): Promise<IGrievanceSubTypeWise[]> => {
-  const { buildingId, floorId } = filters;
+  const { startDate, endDate, buildingId, floorId } = filters;
 
   const andConditions = [];
 
-  if (buildingId) {
+  if (startDate) {
     andConditions.push({
-      OR: [
-        {
-          AND: [{ buildingId }, { isAnonymous: false }],
-        },
-        {
-          AND: [{ device: { buildingId } }, { isAnonymous: true }],
-        },
-      ],
+      date: {
+        gte: new Date(`${startDate}, 00:00:00`),
+      },
     });
   }
 
-  if (floorId) {
+  if (endDate) {
     andConditions.push({
-      OR: [
-        {
-          AND: [{ floorId }, { isAnonymous: false }],
-        },
-        {
-          AND: [{ device: { floorId } }, { isAnonymous: false }],
-        },
-      ],
+      date: {
+        lte: new Date(`${endDate}, 23:59:59`),
+      },
     });
+  }
+
+  if (buildingId) {
+    andConditions.push({ buildingId });
+  }
+
+  if (floorId) {
+    andConditions.push({ floorId });
   }
 
   const whereConditions: Prisma.GrievanceWhereInput =
@@ -238,34 +217,32 @@ const grievanceSubTypeWise = async (
 const departmentWise = async (
   filters: IReportFilter
 ): Promise<IDepartmentWise[]> => {
-  const { buildingId, floorId } = filters;
+  const { startDate, endDate, buildingId, floorId } = filters;
 
   const andConditions = [];
 
-  if (buildingId) {
+  if (startDate) {
     andConditions.push({
-      OR: [
-        {
-          AND: [{ buildingId }, { isAnonymous: false }],
-        },
-        {
-          AND: [{ device: { buildingId } }, { isAnonymous: true }],
-        },
-      ],
+      date: {
+        gte: new Date(`${startDate}, 00:00:00`),
+      },
     });
   }
 
-  if (floorId) {
+  if (endDate) {
     andConditions.push({
-      OR: [
-        {
-          AND: [{ floorId }, { isAnonymous: false }],
-        },
-        {
-          AND: [{ device: { floorId } }, { isAnonymous: false }],
-        },
-      ],
+      date: {
+        lte: new Date(`${endDate}, 23:59:59`),
+      },
     });
+  }
+
+  if (buildingId) {
+    andConditions.push({ buildingId });
+  }
+
+  if (floorId) {
+    andConditions.push({ floorId });
   }
 
   const whereConditions: Prisma.GrievanceWhereInput =
@@ -290,7 +267,10 @@ const departmentWise = async (
         entries.find(e => e.status === status)?._count || 0;
 
       return {
-        department: departments.find(dep => dep.id === deptId),
+        department: departments.find(dep => dep.id === deptId) || {
+          label: 'Anonymous',
+          labelBn: 'বেনামী',
+        },
         Pending: getCount('Pending'),
         In_Progress: getCount('In_Progress'),
         Resolved: getCount('Resolved'),
@@ -309,21 +289,28 @@ const departmentWise = async (
 const buildingWise = async (
   filters: IReportFilter
 ): Promise<IBuildingWise[]> => {
-  const { floorId } = filters;
+  const { startDate, endDate, floorId } = filters;
 
   const andConditions = [];
 
-  if (floorId) {
+  if (startDate) {
     andConditions.push({
-      OR: [
-        {
-          AND: [{ floorId }, { isAnonymous: false }],
-        },
-        {
-          AND: [{ device: { floorId } }, { isAnonymous: false }],
-        },
-      ],
+      date: {
+        gte: new Date(`${startDate}, 00:00:00`),
+      },
     });
+  }
+
+  if (endDate) {
+    andConditions.push({
+      date: {
+        lte: new Date(`${endDate}, 23:59:59`),
+      },
+    });
+  }
+
+  if (floorId) {
+    andConditions.push({ floorId });
   }
 
   const whereConditions: Prisma.GrievanceWhereInput =
@@ -364,11 +351,36 @@ const buildingWise = async (
 };
 
 // device wise
-const deviceWise = async (): Promise<IDeviceWise[]> => {
+const deviceWise = async (filters: IReportFilter): Promise<IDeviceWise[]> => {
+  const { startDate, endDate } = filters;
+
+  const andConditions = [];
+
+  if (startDate) {
+    andConditions.push({
+      date: {
+        gte: new Date(`${startDate}, 00:00:00`),
+      },
+    });
+  }
+
+  if (endDate) {
+    andConditions.push({
+      date: {
+        lte: new Date(`${endDate}, 23:59:59`),
+      },
+    });
+  }
+
+  const whereConditions: Prisma.GrievanceWhereInput =
+    andConditions.length > 0
+      ? { happiness: 'SAD', AND: andConditions }
+      : { happiness: 'SAD' };
+
   const [devices, grievances] = await Promise.all([
     prisma.device.findMany({ include: { building: true, floor: true } }),
     prisma.grievance.groupBy({
-      where: { happiness: 'SAD' },
+      where: whereConditions,
       by: ['deviceId', 'status'],
       _count: true,
     }),
@@ -399,34 +411,32 @@ const deviceWise = async (): Promise<IDeviceWise[]> => {
 
 // stage wise
 const stageWise = async (filters: IReportFilter): Promise<IStageWise[]> => {
-  const { buildingId, floorId } = filters;
+  const { startDate, endDate, buildingId, floorId } = filters;
 
   const andConditions = [];
 
-  if (buildingId) {
+  if (startDate) {
     andConditions.push({
-      OR: [
-        {
-          AND: [{ buildingId }, { isAnonymous: false }],
-        },
-        {
-          AND: [{ device: { buildingId } }, { isAnonymous: true }],
-        },
-      ],
+      date: {
+        gte: new Date(`${startDate}, 00:00:00`),
+      },
     });
   }
 
-  if (floorId) {
+  if (endDate) {
     andConditions.push({
-      OR: [
-        {
-          AND: [{ floorId }, { isAnonymous: false }],
-        },
-        {
-          AND: [{ device: { floorId } }, { isAnonymous: false }],
-        },
-      ],
+      date: {
+        lte: new Date(`${endDate}, 23:59:59`),
+      },
     });
+  }
+
+  if (buildingId) {
+    andConditions.push({ buildingId });
+  }
+
+  if (floorId) {
+    andConditions.push({ floorId });
   }
 
   const whereConditions: Prisma.GrievanceWhereInput =
@@ -450,34 +460,32 @@ const stageWise = async (filters: IReportFilter): Promise<IStageWise[]> => {
 
 // duration wise
 const durationWise = async (filters: IReportFilter): Promise<IDurationWise> => {
-  const { buildingId, floorId } = filters;
+  const { startDate, endDate, buildingId, floorId } = filters;
 
   const andConditions = [];
 
-  if (buildingId) {
+  if (startDate) {
     andConditions.push({
-      OR: [
-        {
-          AND: [{ buildingId }, { isAnonymous: false }],
-        },
-        {
-          AND: [{ device: { buildingId } }, { isAnonymous: true }],
-        },
-      ],
+      date: {
+        gte: new Date(`${startDate}, 00:00:00`),
+      },
     });
   }
 
-  if (floorId) {
+  if (endDate) {
     andConditions.push({
-      OR: [
-        {
-          AND: [{ floorId }, { isAnonymous: false }],
-        },
-        {
-          AND: [{ device: { floorId } }, { isAnonymous: false }],
-        },
-      ],
+      date: {
+        lte: new Date(`${endDate}, 23:59:59`),
+      },
     });
+  }
+
+  if (buildingId) {
+    andConditions.push({ buildingId });
+  }
+
+  if (floorId) {
+    andConditions.push({ floorId });
   }
 
   const whereConditions: Prisma.GrievanceWhereInput =
